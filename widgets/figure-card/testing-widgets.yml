@@ -1,0 +1,137 @@
+# Inner framed, no padding, no caption
+- type: custom-api
+  title: Figure — framed / no padding / no caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: false
+    padding: false
+    caption: ~
+    template: &figure-card-template |
+      {{ $src := .Options.StringOr "src" "" }}
+      {{ $alt := .Options.StringOr "alt" "" }}
+      {{ $caption := .Options.StringOr "caption" "" }}
+      {{ $frameless := .Options.BoolOr "frameless" false }}
+      {{ $padding := .Options.BoolOr "padding" false }}
+
+      {{ if $src }}
+        <figure
+          class="card{{ if not $frameless }} widget-content-frame{{ else }} rounded{{ end }}"
+          style="
+            margin: 0;
+            overflow: hidden;
+            {{ if $padding }}padding: var(--widget-content-padding);{{ end }}
+          "
+        >
+          <img
+            class="cached finished-transition{{ if or $frameless $padding }} rounded{{ end }}"
+            loading="lazy"
+            decoding="async"
+            src="{{ $src }}"
+            alt="{{ $alt }}"
+            style="display: block; width: 100%; height: auto;"
+          >
+
+          {{ with $caption }}
+            <figcaption
+              class="
+                margin-top-10
+                flex
+                flex-column
+                grow
+                color-subdue
+                {{ if not $padding }}padding-inline-widget margin-bottom-widget{{ end }}
+              "
+            >
+              {{ . }}
+            </figcaption>
+          {{ end }}
+        </figure>
+      {{ end }}
+
+
+# Inner framed, no padding, with caption
+- type: custom-api
+  title: Figure — framed / no padding / caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: false
+    padding: false
+    caption: Caption for a full-bleed framed figure.
+  template: *figure-card-template
+
+# Inner framed, with padding, no caption
+- type: custom-api
+  title: Figure — framed / padding / no caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: false
+    padding: true
+    caption: ~
+  template: *figure-card-template
+
+# Inner framed, with padding, with caption
+- type: custom-api
+  title: Figure — framed / padding / caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: false
+    padding: true
+    caption: Caption for a padded framed figure.
+  template: *figure-card-template
+
+# Inner frameless, no padding, no caption
+- type: custom-api
+  title: Figure — frameless / no padding / no caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: true
+    padding: false
+    caption: ~
+  template: *figure-card-template
+
+# Inner frameless, no padding, with caption
+- type: custom-api
+  title: Figure — frameless / no padding / caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: true
+    padding: false
+    caption: Caption for a frameless full-width figure.
+  template: *figure-card-template
+
+# Inner frameless, with padding, no caption
+- type: custom-api
+  title: Figure — frameless / padding / no caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: true
+    padding: true
+    caption: ~
+  template: *figure-card-template
+
+# Inner frameless, with padding, with caption
+- type: custom-api
+  title: Figure — frameless / padding / caption
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Example alt
+    frameless: true
+    padding: true
+    caption: Caption for a padded frameless figure.
+  template: *figure-card-template
+
