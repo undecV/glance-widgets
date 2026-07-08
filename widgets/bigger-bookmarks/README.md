@@ -9,6 +9,7 @@ A Monitor-style bookmark launcher with optional icons, descriptions, and link ar
 ## Preview
 
 ![Preview](./preview.png)
+
 ## Options
 
 Unlike Glance's native Bookmarks widget, *Bigger Bookmarks* does not support groups. Each configured link is rendered as an independent Monitor-style row.
@@ -97,77 +98,121 @@ When adding multiple *Bigger Bookmarks* widgets, define the template once with a
         same-tab: false
         target: _blank
         hide-arrow: false
-  template: &bigger-bookmarks-template |
-    {{ $links := index .Options "links" }}
-    {{ $globalHideArrow := .Options.BoolOr "hide-arrow" false }}
-    {{ $color := .Options.StringOr "color" "" }}
+    template: &bigger-bookmarks-template |
+      {{ $links := index .Options "links" }}
+      {{ $globalHideArrow := .Options.BoolOr "hide-arrow" false }}
+      {{ $color := .Options.StringOr "color" "" }}
 
-    <ul class="dynamic-columns list-gap-20 list-with-separator">
-    {{ range $link := $links }}
+      <style>
+        .bigger-bookmarks-link {
+          width: 100%;
+          min-height: 5rem;
+          padding: 0.75rem 0;
+          border-radius: var(--border-radius);
+          text-decoration: none;
+        }
 
-        {{/* Native Bookmarks target semantics */}}
-        {{ $target := "_blank" }}
-        {{ if index $link "same-tab" }}
-        {{ $target = "" }}
-        {{ end }}
-        {{ with $configuredTarget := index $link "target" }}
-        {{ $target = $configuredTarget }}
-        {{ end }}
+        .bigger-bookmarks-icon {
+          display: block;
+          opacity: 0.8;
+          filter: grayscale(0.4);
+          object-fit: contain;
+          aspect-ratio: 1 / 1;
+          width: 3.2rem;
+          position: relative;
+          top: -0.1rem;
+          transition: filter 0.3s, opacity 0.3s;
+          flex-shrink: 0;
+        }
 
-        {{/* Link-level hide-arrow overrides widget-level hide-arrow,
-            including an explicit false override. */}}
-        {{ $hideArrow := $globalHideArrow }}
-        {{ $rawHideArrow := index $link "hide-arrow" }}
-        {{ if eq (printf "%T" $rawHideArrow) "bool" }}
-        {{ $hideArrow = $rawHideArrow }}
-        {{ end }}
+        .bigger-bookmarks-link:hover .bigger-bookmarks-icon {
+          opacity: 1;
+        }
 
-        <a
-        class="monitor-site flex items-center gap-15"
-        href="{{ index $link "url" }}"
-        {{ if $target }}target="{{ $target }}"{{ end }}
-        rel="noreferrer"
-        title="{{ index $link "title" }}"
-        >
-        {{ with $icon := index $link "icon" }}
-            <img
-            class="monitor-site-icon"
-            src="{{ $icon }}"
-            alt=""
-            loading="lazy"
+        .bigger-bookmarks-link:hover .bigger-bookmarks-icon:not(.flat-icon) {
+          filter: grayscale(0);
+        }
+
+        .bigger-bookmarks-status-icon {
+          flex-shrink: 0;
+          margin-left: auto;
+          width: 2rem;
+          height: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .bigger-bookmarks-arrow {
+          display: block;
+          text-align: center;
+          font-size: 1.15em;
+          line-height: 1;
+        }
+      </style>
+
+      <ul class="dynamic-columns list-gap-20 list-with-separator">
+      {{ range $link := $links }}
+
+          {{/* Native Bookmarks target semantics */}}
+          {{ $target := "_blank" }}
+          {{ if index $link "same-tab" }}
+          {{ $target = "" }}
+          {{ end }}
+          {{ with $configuredTarget := index $link "target" }}
+          {{ $target = $configuredTarget }}
+          {{ end }}
+
+          {{/* Link-level hide-arrow overrides widget-level hide-arrow,
+              including an explicit false override. */}}
+          {{ $hideArrow := $globalHideArrow }}
+          {{ $rawHideArrow := index $link "hide-arrow" }}
+          {{ if eq (printf "%T" $rawHideArrow) "bool" }}
+          {{ $hideArrow = $rawHideArrow }}
+          {{ end }}
+
+          <li style="min-width: 0;">
+            <a
+              class="bigger-bookmarks-link flex items-center gap-15"
+              href="{{ index $link "url" }}"
+              {{ if $target }}target="{{ $target }}"{{ end }}
+              rel="noopener noreferrer"
+              title="{{ index $link "title" }}"
             >
-        {{ end }}
+              {{ with $icon := index $link "icon" }}
+                <img
+                  class="bigger-bookmarks-icon"
+                  src="{{ $icon }}"
+                  alt=""
+                  loading="lazy"
+                >
+              {{ end }}
 
-        <div class="grow min-width-0">
-            <span class="size-h3 color-highlight text-truncate block">
-            {{ index $link "title" }}
-            </span>
+              <div class="grow min-width-0">
+                <span class="size-h3 color-highlight text-truncate block">
+                  {{ index $link "title" }}
+                </span>
 
-            {{ with $description := index $link "description" }}
-            <ul class="list-horizontal-text">
-                <li>{{ $description }}</li>
-            </ul>
-            {{ end }}
-        </div>
+                {{ with $description := index $link "description" }}
+                  <ul class="list-horizontal-text">
+                    <li>{{ $description }}</li>
+                  </ul>
+                {{ end }}
+              </div>
 
-        {{ if not $hideArrow }}
-            <div class="monitor-site-status-icon" aria-hidden="true">
-            <span
-                {{ if not $color }}class="color-highlight"{{ end }}
-                style="
-                display: block;
-                text-align: center;
-                font-size: 1.15em;
-                line-height: 1;
-                {{ if $color }}color: hsl({{ $color }});{{ end }}
-                "
-            >↗</span>
-            </div>
-        {{ end }}
-        </a>
+              {{ if not $hideArrow }}
+                <span class="bigger-bookmarks-status-icon" aria-hidden="true">
+                  <span
+                    class="bigger-bookmarks-arrow{{ if not $color }} color-primary{{ end }}"
+                    {{ if $color }}style="color: hsl({{ $color }});"{{ end }}
+                  >↗</span>
+                </span>
+              {{ end }}
+            </a>
+          </li>
 
-    {{ end }}
-    </ul>
+      {{ end }}
+      </ul>
 ```
 
 The widget does not define a `url`, so Glance does not perform a server-side request or health check. External icons are still loaded normally by the browser.
