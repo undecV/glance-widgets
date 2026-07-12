@@ -12,13 +12,13 @@ A Monitor-style bookmark launcher with optional icons, descriptions, and link ar
 
 ## Options
 
-Unlike Glance's native Bookmarks widget, *Bigger Bookmarks* does not support groups. Each configured link is rendered as an independent Monitor-style row.
+Unlike Glance's native Bookmarks widget, *Bigger Bookmarks* does not support groups. Each configured link is rendered as an individual Monitor-style item in a responsive multi-column layout.
 
-| Name         | Type    | Required | Default |
-| ------------ | ------- | -------- | ------- |
-| `color`      | string  | No       | —       |
-| `hide-arrow` | boolean | No       | `false` |
-| `links`      | array   | Yes      | —       |
+| Name         | Type    | Required | Default                |
+| ------------ | ------- | -------- | ---------------------- |
+| `color`      | string  | No       | Glance highlight color |
+| `hide-arrow` | boolean | No       | `false`                |
+| `links`      | array   | Yes      | —                      |
 
 ### `color`
 
@@ -36,45 +36,89 @@ Individual links may override this setting through `links[].hide-arrow`.
 
 A list of bookmark entries. Links are rendered in the same order as the YAML configuration.
 
-| Name          | Type    | Required | Default                       |
-| ------------- | ------- | -------- | ----------------------------- |
-| `title`       | string  | Yes      | —                             |
-| `url`         | string  | Yes      | —                             |
-| `icon`        | string  | No       | —                             |
-| `description` | string  | No       | —                             |
-| `same-tab`    | boolean | No       | `false`                       |
-| `target`      | string  | No       | `_blank`                      |
-| `hide-arrow`  | boolean | No       | Inherits `options.hide-arrow` |
+| Name                  | Type    | Required | Default                       |
+| --------------------- | ------- | -------- | ----------------------------- |
+| `links[].title`       | string  | Yes      | —                             |
+| `links[].url`         | string  | Yes      | —                             |
+| `links[].icon`        | string  | No       | No icon                       |
+| `links[].description` | string  | No       | No description                |
+| `links[].same-tab`    | boolean | No       | `false`                       |
+| `links[].target`      | string  | No       | `_blank`                      |
+| `links[].hide-arrow`  | boolean | No       | Inherits `options.hide-arrow` |
 
-#### `title`
+#### `links[].title`
 
 The displayed bookmark name.
 
-#### `url`
+#### `links[].url`
 
-The destination URL. The entire row is clickable.
+The destination URL. The entire item is clickable.
 
-#### `icon`
+#### `links[].icon`
 
-An optional direct image URL or local image path, such as `https://example.com/favicon.ico` or `/assets/icons/example.svg`.
+An optional icon specified as a direct image URL, local image path, or Glance-compatible icon shorthand.
 
-Glance icon shorthand such as `si:immich`, `mdi:home`, `di:immich`, and `sh:glance` is not supported.
+Supported forms include:
 
-#### `description`
+```yaml
+icon: https://example.com/favicon.ico
+icon: /assets/icons/example.svg
+
+icon: si:immich
+icon: mdi:camera
+icon: di:immich
+icon: sh:immich
+```
+
+Supported icon libraries:
+
+| Prefix | Library                                                           | Auto-inverted |
+| ------ | ----------------------------------------------------------------- | :-----------: |
+| `si:`  | [Simple Icons](https://simpleicons.org/)                          |      Yes      |
+| `mdi:` | [Material Design Icons](https://pictogrammers.com/library/mdi/)   |      Yes      |
+| `di:`  | [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) |       No      |
+| `sh:`  | [selfh.st Icons](https://selfh.st/icons/)                         |       No      |
+
+Simple Icons and Material Design Icons use SVG files. Dashboard Icons and selfh.st Icons use SVG by default and also support an explicit `.png` extension:
+
+```yaml
+icon: di:immich.png
+icon: sh:immich.png
+```
+
+Use the `auto-invert` prefix for a monochrome icon that should be inverted in Glance's dark color scheme:
+
+```yaml
+icon: auto-invert /assets/icons/example.svg
+icon: auto-invert https://example.com/icon.svg
+icon: auto-invert di:example
+```
+
+Simple Icons and Material Design Icons automatically use this behavior.
+
+`auto-invert` is intended for monochrome icons. Applying it to a colored image may produce unexpected colors in dark mode.
+
+The icon shorthand and `auto-invert` behavior imitate Glance's native icon parser so that existing icon values can be reused whenever possible. However, *Bigger Bookmarks* implements this parsing independently inside its custom template. Exact compatibility with Glance's current or future parser behavior is therefore not guaranteed.
+
+Unknown prefixes are treated as regular image URLs or paths.
+
+#### `links[].description`
 
 Optional subdued text displayed below the title.
 
-#### `same-tab`
+#### `links[].same-tab`
 
 Opens the link in the current tab when set to `true`.
 
-#### `target`
+#### `links[].target`
 
-Sets the HTML link target, such as `_blank`, `_self`, `_parent`, or `_top`.
+Sets the HTML link target.
+
+Common values include `_blank`, `_self`, `_parent`, and `_top`, but any valid HTML link target is accepted.
 
 When both `target` and `same-tab` are configured, `target` takes precedence.
 
-#### `hide-arrow`
+#### `links[].hide-arrow`
 
 Overrides the widget-level `hide-arrow` setting for this link.
 
@@ -93,126 +137,215 @@ When adding multiple *Bigger Bookmarks* widgets, define the template once with a
     links:
       - title: Title
         url: https://example.com/
-        icon: ./static/02b8858d2d/app-icon.png
+        icon: si:github
         description: Description
         same-tab: false
         target: _blank
         hide-arrow: false
-    template: &bigger-bookmarks-template |
-      {{ $links := index .Options "links" }}
-      {{ $globalHideArrow := .Options.BoolOr "hide-arrow" false }}
-      {{ $color := .Options.StringOr "color" "" }}
+  template: &bigger-bookmarks-template |
+    {{ $links := index .Options "links" }}
+    {{ $globalHideArrow := .Options.BoolOr "hide-arrow" false }}
+    {{ $color := .Options.StringOr "color" "" }}
 
-      <style>
-        .bigger-bookmarks-link {
-          width: 100%;
-          min-height: 5rem;
-          padding: 0.75rem 0;
-          border-radius: var(--border-radius);
-          text-decoration: none;
-        }
+    <style>
+      .item-bigger-bookmarks {
+        min-width: 0;
+        display: flex;
+      }
 
-        .bigger-bookmarks-icon {
-          display: block;
-          opacity: 0.8;
-          filter: grayscale(0.4);
-          object-fit: contain;
-          aspect-ratio: 1 / 1;
-          width: 3.2rem;
-          position: relative;
-          top: -0.1rem;
-          transition: filter 0.3s, opacity 0.3s;
-          flex-shrink: 0;
-        }
+      .link-bigger-bookmarks {
+        width: 100%;
+        height: 100%;
+        min-height: 5rem;
+        padding: 0.75rem 0;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+      }
 
-        .bigger-bookmarks-link:hover .bigger-bookmarks-icon {
-          opacity: 1;
-        }
+      .icon-bigger-bookmarks {
+        display: block;
+        opacity: 0.8;
+        filter: grayscale(0.4);
+        object-fit: contain;
+        aspect-ratio: 1 / 1;
+        width: 3.2rem;
+        position: relative;
+        top: -0.1rem;
+        transition: filter 0.3s, opacity 0.3s;
+        flex-shrink: 0;
+        border-radius: var(--border-radius);
+      }
 
-        .bigger-bookmarks-link:hover .bigger-bookmarks-icon:not(.flat-icon) {
-          filter: grayscale(0);
-        }
+      .icon-bigger-bookmarks.flat-icon {
+        opacity: 0.7;
+      }
 
-        .bigger-bookmarks-status-icon {
-          flex-shrink: 0;
-          margin-left: auto;
-          width: 2rem;
-          height: 2rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+      .link-bigger-bookmarks:hover .icon-bigger-bookmarks {
+        opacity: 1;
+      }
 
-        .bigger-bookmarks-arrow {
-          display: block;
-          text-align: center;
-          font-size: 1.15em;
-          line-height: 1;
-        }
-      </style>
+      .link-bigger-bookmarks:hover .icon-bigger-bookmarks:not(.flat-icon) {
+        filter: grayscale(0);
+      }
 
-      <ul class="dynamic-columns list-gap-20 list-with-separator">
-      {{ range $link := $links }}
+      .status-icon-bigger-bookmarks {
+        flex-shrink: 0;
+        margin-left: auto;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-          {{/* Native Bookmarks target semantics */}}
-          {{ $target := "_blank" }}
-          {{ if index $link "same-tab" }}
+      .arrow-bigger-bookmarks {
+        display: block;
+        text-align: center;
+        font-size: 1.15em;
+        line-height: 1;
+      }
+    </style>
+
+    <ul class="dynamic-columns list-gap-20 list-with-separator">
+    {{ range $link := $links }}
+
+        {{/* Native Bookmarks target semantics */}}
+        {{ $target := "_blank" }}
+        {{ if index $link "same-tab" }}
           {{ $target = "" }}
-          {{ end }}
-          {{ with $configuredTarget := index $link "target" }}
+        {{ end }}
+        {{ with $configuredTarget := index $link "target" }}
           {{ $target = $configuredTarget }}
-          {{ end }}
+        {{ end }}
 
-          {{/* Link-level hide-arrow overrides widget-level hide-arrow,
-              including an explicit false override. */}}
-          {{ $hideArrow := $globalHideArrow }}
-          {{ $rawHideArrow := index $link "hide-arrow" }}
-          {{ if eq (printf "%T" $rawHideArrow) "bool" }}
+        {{/*
+          Link-level hide-arrow overrides widget-level hide-arrow,
+          including an explicit false override.
+        */}}
+        {{ $hideArrow := $globalHideArrow }}
+        {{ $rawHideArrow := index $link "hide-arrow" }}
+        {{ if eq (printf "%T" $rawHideArrow) "bool" }}
           {{ $hideArrow = $rawHideArrow }}
-          {{ end }}
+        {{ end }}
 
-          <li style="min-width: 0;">
-            <a
-              class="bigger-bookmarks-link flex items-center gap-15"
-              href="{{ index $link "url" }}"
-              {{ if $target }}target="{{ $target }}"{{ end }}
-              rel="noopener noreferrer"
-              title="{{ index $link "title" }}"
-            >
-              {{ with $icon := index $link "icon" }}
-                <img
-                  class="bigger-bookmarks-icon"
-                  src="{{ $icon }}"
-                  alt=""
-                  loading="lazy"
-                >
+        <li class="item-bigger-bookmarks">
+          <a
+            class="link-bigger-bookmarks flex items-center gap-15"
+            href="{{ index $link "url" }}"
+            {{ if $target }}target="{{ $target }}"{{ end }}
+            rel="noopener noreferrer"
+            title="{{ index $link "title" }}"
+          >
+            {{ with $configuredIcon := index $link "icon" }}
+              {{ $icon := printf "%s" $configuredIcon }}
+              {{ $iconURL := $icon }}
+              {{ $flatIcon := false }}
+
+              {{/* Explicit auto-invert prefix */}}
+              {{ if findMatch `^auto-invert ` $icon }}
+                {{ $flatIcon = true }}
+                {{ $icon = trimPrefix "auto-invert " $icon }}
+                {{ $iconURL = $icon }}
               {{ end }}
 
-              <div class="grow min-width-0">
-                <span class="size-h3 color-highlight text-truncate block">
-                  {{ index $link "title" }}
-                </span>
+              {{/* Simple Icons: SVG only, automatically inverted */}}
+              {{ if findMatch `^si:` $icon }}
+                {{ $iconName := trimPrefix "si:" $icon }}
+                {{ $basename := replaceMatches `\..*$` "" $iconName }}
 
-                {{ with $description := index $link "description" }}
-                  <ul class="list-horizontal-text">
-                    <li>{{ $description }}</li>
-                  </ul>
+                {{ $iconURL = concat
+                  "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/"
+                  $basename
+                  ".svg"
+                }}
+                {{ $flatIcon = true }}
+
+              {{/* Material Design Icons: SVG only, automatically inverted */}}
+              {{ else if findMatch `^mdi:` $icon }}
+                {{ $iconName := trimPrefix "mdi:" $icon }}
+                {{ $basename := replaceMatches `\..*$` "" $iconName }}
+
+                {{ $iconURL = concat
+                  "https://cdn.jsdelivr.net/npm/@mdi/svg@latest/svg/"
+                  $basename
+                  ".svg"
+                }}
+                {{ $flatIcon = true }}
+
+              {{/* Dashboard Icons: SVG by default, PNG when requested */}}
+              {{ else if findMatch `^di:` $icon }}
+                {{ $iconName := trimPrefix "di:" $icon }}
+                {{ $basename := replaceMatches `\..*$` "" $iconName }}
+                {{ $extension := "svg" }}
+
+                {{ if findMatch `\.png$` $iconName }}
+                  {{ $extension = "png" }}
                 {{ end }}
-              </div>
 
-              {{ if not $hideArrow }}
-                <span class="bigger-bookmarks-status-icon" aria-hidden="true">
-                  <span
-                    class="bigger-bookmarks-arrow{{ if not $color }} color-primary{{ end }}"
-                    {{ if $color }}style="color: hsl({{ $color }});"{{ end }}
-                  >↗</span>
-                </span>
+                {{ $iconURL = concat
+                  "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/"
+                  $extension
+                  "/"
+                  $basename
+                  "."
+                  $extension
+                }}
+
+              {{/* selfh.st Icons: SVG by default, PNG when requested */}}
+              {{ else if findMatch `^sh:` $icon }}
+                {{ $iconName := trimPrefix "sh:" $icon }}
+                {{ $basename := replaceMatches `\..*$` "" $iconName }}
+                {{ $extension := "svg" }}
+
+                {{ if findMatch `\.png$` $iconName }}
+                  {{ $extension = "png" }}
+                {{ end }}
+
+                {{ $iconURL = concat
+                  "https://cdn.jsdelivr.net/gh/selfhst/icons/"
+                  $extension
+                  "/"
+                  $basename
+                  "."
+                  $extension
+                }}
               {{ end }}
-            </a>
-          </li>
 
-      {{ end }}
-      </ul>
+              <img
+                class="icon-bigger-bookmarks{{ if $flatIcon }} flat-icon{{ end }}"
+                src="{{ $iconURL }}"
+                alt=""
+                loading="lazy"
+              >
+            {{ end }}
+
+            <div class="grow min-width-0">
+              <span class="size-h3 color-highlight text-truncate block">
+                {{ index $link "title" }}
+              </span>
+
+              {{ with $description := index $link "description" }}
+                <ul class="list-horizontal-text">
+                  <li>{{ $description }}</li>
+                </ul>
+              {{ end }}
+            </div>
+
+            {{ if not $hideArrow }}
+              <span class="status-icon-bigger-bookmarks" aria-hidden="true">
+                <span
+                  class="arrow-bigger-bookmarks{{ if not $color }} color-primary{{ end }}"
+                  {{ if $color }}style="color: hsl({{ $color }});"{{ end }}
+                >↗</span>
+              </span>
+            {{ end }}
+          </a>
+        </li>
+
+    {{ end }}
+    </ul>
 ```
 
-The widget does not define a `url`, so Glance does not perform a server-side request or health check. External icons are still loaded normally by the browser.
+The widget does not define a widget-level `url`, so Glance does not perform a server-side request or health check.
+
+Icon images are fetched directly by the browser. The `si:`, `mdi:`, `di:`, and `sh:` forms resolve to externally hosted jsDelivr icon files. Use a local path such as `/assets/icons/example.svg` when icons should instead be served from Glance's configured assets directory.

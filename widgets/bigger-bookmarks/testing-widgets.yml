@@ -1,194 +1,137 @@
-- type: custom-api
-  title: Bigger Bookmark — arrows on
-  options:
-    color: 20 50 50
-    hide-arrow: false
+- type: group
+  title: Bigger Bookmarks — Layout & Arrow
+  widgets:
+    # Global arrow visible
+    - type: custom-api
+      title: Layout — Global Arrow
+      options:
+        color: 200 50 50
+        hide-arrow: false
+        links: &layout-test-grid
+          # Global setting: arrow visible
+          - title: Title Only
+            url: https://example.com/title-only
 
-    links:
-      - title: Title only
-        url: https://example.com/title-only
+          # Description and icon alignment
+          - title: Title + Description
+            description: "Description"
+            url: https://example.com/description
+            icon: ./static/02b8858d2d/app-icon.png
 
-      - title: No icon
-        url: https://example.com/no-icon
-        description: Has description, but no icon
+          # Long text and truncation
+          - title: A Very Long Bookmark Title for Testing Text Truncation
+            description: "A longer description for checking spacing, alignment, and overflow behavior."
+            url: https://example.com/long-content
+            icon: si:github
 
-      - title: No description
-        url: https://example.com/no-description
-        icon: ./static/02b8858d2d/app-icon.png
+          # Explicit link-level hide
+          - title: Per-Link Arrow Hidden
+            description: "hide-arrow: true overrides the global false value."
+            url: https://example.com/link-arrow-hidden
+            icon: mdi:eye-off
+            hide-arrow: true
 
-      - title: Icon and description
-        url: https://example.com/icon-description
-        icon: ./static/02b8858d2d/app-icon.png
-        description: Standard full row
+          # Explicit link-level show
+          - title: Per-Link Arrow Visible
+            description: "hide-arrow: false preserves the global false value."
+            url: https://example.com/link-arrow-visible
+            icon: mdi:eye
+            hide-arrow: false
 
-      - title: Same tab
-        url: https://example.com/same-tab
-        description: Should have no target attribute
-        same-tab: true
+          # Native same-tab behavior
+          - title: Same Tab
+            description: "Tests same-tab: true and a missing icon."
+            url: https://example.com/same-tab
+            same-tab: true
 
-      - title: Explicit self target
-        url: https://example.com/target-self
-        description: Explicit target wins
-        target: _self
+          # Explicit target behavior
+          - title: Explicit Target
+            description: "Tests target overriding the default target."
+            url: https://example.com/explicit-target
+            target: _self
+            icon: sh:glance
 
-      - title: Target overrides same-tab
-        url: https://example.com/target-wins
-        description: target _blank should override same-tab true
-        same-tab: true
-        target: _blank
+      template: *bigger-bookmarks-template
 
-      - title: Link hides arrow
-        url: https://example.com/hide-arrow
-        description: Should not show arrow
+    # Same links, but global arrow hidden
+    - type: custom-api
+      title: Layout — Global Arrow Hidden
+      options:
+        color: 200 50 50
         hide-arrow: true
+        links: *layout-test-grid
+      template: *bigger-bookmarks-template
 
-      - title: Explicit arrow enabled
-        url: https://example.com/show-arrow
-        description: Explicit false should still show arrow
-        hide-arrow: false
-
-      - title: Empty description
-        url: https://example.com/empty-description
-        icon: ./static/02b8858d2d/app-icon.png
-        description: ""
-
-      - title: Empty icon
-        url: https://example.com/empty-icon
-        icon: ""
-        description: Empty icon should behave like no icon
-
-      - url: https://example.com/no-title
-        icon: ./static/02b8858d2d/app-icon.png
-        description: Missing title edge case
-
-  template: &bigger-bookmarks-template |
-    {{ $links := index .Options "links" }}
-    {{ $globalHideArrow := .Options.BoolOr "hide-arrow" false }}
-    {{ $color := .Options.StringOr "color" "" }}
-
-    <ul class="dynamic-columns list-gap-20 list-with-separator">
-    {{ range $link := $links }}
-
-        {{/* Native Bookmarks target semantics */}}
-        {{ $target := "_blank" }}
-        {{ if index $link "same-tab" }}
-        {{ $target = "" }}
-        {{ end }}
-        {{ with $configuredTarget := index $link "target" }}
-        {{ $target = $configuredTarget }}
-        {{ end }}
-
-        {{/* Link-level hide-arrow overrides widget-level hide-arrow,
-            including an explicit false override. */}}
-        {{ $hideArrow := $globalHideArrow }}
-        {{ $rawHideArrow := index $link "hide-arrow" }}
-        {{ if eq (printf "%T" $rawHideArrow) "bool" }}
-        {{ $hideArrow = $rawHideArrow }}
-        {{ end }}
-
-        <a
-        class="monitor-site flex items-center gap-15"
-        href="{{ index $link "url" }}"
-        {{ if $target }}target="{{ $target }}"{{ end }}
-        rel="noreferrer"
-        title="{{ index $link "title" }}"
-        >
-        {{ with $icon := index $link "icon" }}
-            <img
-            class="monitor-site-icon"
-            src="{{ $icon }}"
-            alt=""
-            loading="lazy"
-            >
-        {{ end }}
-
-        <div class="grow min-width-0">
-            <span class="size-h3 color-highlight text-truncate block">
-            {{ index $link "title" }}
-            </span>
-
-            {{ with $description := index $link "description" }}
-            <ul class="list-horizontal-text">
-                <li>{{ $description }}</li>
-            </ul>
-            {{ end }}
-        </div>
-
-        {{ if not $hideArrow }}
-            <div class="monitor-site-status-icon" aria-hidden="true">
-            <span
-                {{ if not $color }}class="color-highlight"{{ end }}
-                style="
-                display: block;
-                text-align: center;
-                font-size: 1.15em;
-                line-height: 1;
-                {{ if $color }}color: hsl({{ $color }});{{ end }}
-                "
-            >↗</span>
-            </div>
-        {{ end }}
-        </a>
-
-    {{ end }}
-    </ul>
-
-- type: custom-api
-  title: Bigger Bookmark — arrows off
-  options:
-    color: 200 50 50
-    hide-arrow: true
-    links:
-      - title: Inherits hidden arrow
-        url: https://example.com/inherit-hidden
-        description: No link-level setting
-
-      - title: Link forces arrow visible
-        url: https://example.com/force-visible
-        icon: ./static/02b8858d2d/app-icon.png
-        description: Explicit false overrides global true
-        hide-arrow: false
-
-      - title: Link keeps arrow hidden
-        url: https://example.com/force-hidden
-        icon: ./static/02b8858d2d/app-icon.png
-        description: Explicit true
+- type: group
+  title: Bigger Bookmarks — Icons
+  widgets:
+    # Light/default presentation of every supported icon source
+    - type: custom-api
+      title: Icon Libraries
+      options:
         hide-arrow: true
+        links: &icon-test-grid
+          - title: No Icon
+            description: "Verifies layout without an icon."
+            url: https://example.com/no-icon
 
-      - title: Bare row
-        url: https://example.com/bare-row
+          - title: Local Image
+            description: "Raw local PNG without auto-invert."
+            url: https://example.com/local-image
+            icon: ./static/02b8858d2d/app-icon.png
 
-      - title: Same tab inherits hidden arrow
-        url: https://example.com/same-tab-hidden
-        description: No target, no arrow
-        same-tab: true
+          - title: Local Image — Auto Invert
+            description: "Explicit auto-invert applied to a local PNG."
+            url: https://example.com/local-image-auto-invert
+            icon: auto-invert ./static/02b8858d2d/app-icon.png
 
-      - title: Same tab forces arrow visible
-        url: https://example.com/same-tab-visible
-        icon: ./static/02b8858d2d/app-icon.png
-        description: same-tab must not suppress arrow
-        same-tab: true
+          - title: Simple Icons
+            description: "si: uses SVG and automatically enables flat-icon."
+            url: https://github.com/
+            icon: si:github
+
+          - title: Material Design Icons
+            description: "mdi: uses SVG and automatically enables flat-icon."
+            url: https://example.com/mdi
+            icon: mdi:bookmark
+
+          - title: Dashboard Icons — SVG
+            description: "di: defaults to SVG."
+            url: https://www.proxmox.com/
+            icon: di:proxmox
+
+          - title: Dashboard Icons — PNG
+            description: "Explicit PNG extension."
+            url: https://www.proxmox.com/
+            icon: di:proxmox.png
+
+          - title: selfh.st Icons — SVG
+            description: "sh: defaults to SVG."
+            url: https://github.com/glanceapp/glance
+            icon: sh:glance
+
+          - title: selfh.st Icons — PNG
+            description: "Explicit PNG extension."
+            url: https://github.com/glanceapp/glance
+            icon: sh:glance.png
+
+          - title: Dashboard Icon — Auto Invert
+            description: "Explicit auto-invert overrides the normal colored-icon behavior."
+            url: https://example.com/di-auto-invert
+            icon: auto-invert di:proxmox
+
+          - title: selfh.st Icon — Auto Invert
+            description: "Explicit auto-invert applied to an sh: icon."
+            url: https://example.com/sh-auto-invert
+            icon: auto-invert sh:glance
+
+      template: *bigger-bookmarks-template
+
+    # Same icon grid with arrows enabled to verify right-side alignment
+    - type: custom-api
+      title: Icons + Arrow Alignment
+      options:
+        color: 20 50 50
         hide-arrow: false
-
-      - title: Explicit target and visible arrow
-        url: https://example.com/target-visible
-        description: _parent target with arrow
-        target: _parent
-        hide-arrow: false
-
-      - title: Target overrides same-tab, arrow stays hidden
-        url: https://example.com/target-hidden
-        icon: ./static/02b8858d2d/app-icon.png
-        description: target _top should override same-tab
-        same-tab: true
-        target: _top
-
-      - title: Empty optional values
-        url: https://example.com/empty-values
-        icon: ""
-        description: ""
-        hide-arrow: false
-
-      - url: https://example.com/no-title-global-hidden
-        description: Missing title with global hide-arrow true
-  template: *bigger-bookmarks-template
+        links: *icon-test-grid
+      template: *bigger-bookmarks-template
