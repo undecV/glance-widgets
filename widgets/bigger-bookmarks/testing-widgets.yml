@@ -1,8 +1,45 @@
+- <<: *bigger-bookmarks
+  title: Bigger Bookmarks — Icon Fallback
+  options:
+    icon-fallback: /assets/icons/svgrepo-com/error-13658.svg
+    links:
+      - title: Healthy Primary
+        description: "Original icon stays visible."
+        url: https://example.com/
+        icon: sh:glance
+      - title: Global Fallback
+        description: "Broken image uses the global bookmark icon."
+        url: https://example.com/
+        icon: /assets/__bigger_bookmarks_missing_primary__.png
+      - title: Per-Link Fallback
+        description: "Colored fallback overrides the global monochrome icon."
+        url: https://example.com/
+        icon: auto-invert /assets/__bigger_bookmarks_missing_primary__.png
+        icon-fallback: /assets/icons/svgrepo-com/warning-22151.svg
+      - title: Image Fallback
+        description: "Fallback also accepts an image URL or local path."
+        url: https://example.com/
+        icon: /assets/__bigger_bookmarks_missing_primary__.png
+        icon-fallback: /static/02b8858d2d/app-icon.png
+      - title: Fallback Disabled
+        description: "An empty string disables the inherited fallback."
+        url: https://example.com/
+        icon: /assets/__bigger_bookmarks_missing_primary__.png
+        icon-fallback: ""
+      - title: Both Images Fail
+        description: "Stops retrying and hides the broken image."
+        url: https://example.com/
+        icon: /assets/__bigger_bookmarks_missing_primary__.png
+        icon-fallback: /assets/__bigger_bookmarks_missing_fallback__.png
+      - title: No Icon
+        description: "A missing icon setting remains text-only."
+        url: https://example.com/
+
 - type: group
   title: Bigger Bookmarks — Layout & Arrow
   widgets:
     # Global arrow visible
-    - type: custom-api
+    - <<: *bigger-bookmarks
       title: Layout — Global Arrow
       options:
         color: 200 50 50
@@ -51,22 +88,20 @@
             target: _self
             icon: sh:glance
 
-      template: *bigger-bookmarks-template
 
     # Same links, but global arrow hidden
-    - type: custom-api
+    - <<: *bigger-bookmarks
       title: Layout — Global Arrow Hidden
       options:
         color: 200 50 50
         hide-arrow: true
         links: *layout-test-grid
-      template: *bigger-bookmarks-template
 
 - type: group
   title: Bigger Bookmarks — Icons
   widgets:
     # Light/default presentation of every supported icon source
-    - type: custom-api
+    - <<: *bigger-bookmarks
       title: Icon Libraries
       options:
         hide-arrow: true
@@ -125,13 +160,10 @@
             url: https://example.com/sh-auto-invert
             icon: auto-invert sh:glance
 
-      template: *bigger-bookmarks-template
-
     # Same icon grid with arrows enabled to verify right-side alignment
-    - type: custom-api
+    - <<: *bigger-bookmarks
       title: Icons + Arrow Alignment
       options:
         color: 20 50 50
         hide-arrow: false
         links: *icon-test-grid
-      template: *bigger-bookmarks-template
