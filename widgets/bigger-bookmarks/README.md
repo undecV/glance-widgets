@@ -8,7 +8,7 @@ A Monitor-style bookmark launcher with optional icons, fallback images, descript
 
 ## Preview
 
-![Preview](./preview.png)
+![Bigger Bookmarks showing six bookmarks in a responsive grid](./preview.png)
 
 ## Options
 
@@ -37,7 +37,7 @@ Individual links may override this setting through `links[].hide-arrow`.
 
 An optional replacement image used when a configured icon fails to load. Individual links inherit this value unless they override it through `links[].icon-fallback`.
 
-Use a directly loadable image URL or a local asset path such as `/assets/icons/fallback.svg`. Add the `auto-invert` prefix when a monochrome fallback should be inverted in Glance's dark color scheme:
+Use a directly loadable image URL or a browser-accessible asset path such as `/assets/icons/fallback.svg`. Add the `auto-invert` prefix when a monochrome fallback should be inverted in Glance's dark color scheme:
 
 ```yaml
 icon-fallback: /assets/icons/fallback.png
@@ -61,7 +61,7 @@ A list of bookmark entries. Links are rendered in the same order as the YAML con
 | `links[].icon-fallback` | string  | No       | Inherits `options.icon-fallback`  |
 | `links[].description`   | string  | No       | No description                   |
 | `links[].same-tab`      | boolean | No       | `false`                          |
-| `links[].target`        | string  | No       | `_blank`                         |
+| `links[].target`        | string  | No       | Determined by `same-tab`         |
 | `links[].hide-arrow`    | boolean | No       | Inherits `options.hide-arrow`     |
 
 #### `links[].title`
@@ -74,7 +74,7 @@ The destination URL. The entire item is clickable.
 
 #### `links[].icon`
 
-An optional icon specified as a direct image URL, local image path, or Glance-compatible icon shorthand.
+An optional icon specified as a direct image URL, browser-accessible image path, or Glance-compatible icon shorthand.
 
 Supported forms include:
 
@@ -122,7 +122,7 @@ Unknown prefixes are treated as regular image URLs or paths.
 
 #### `links[].icon-fallback`
 
-Overrides the widget-level fallback image for this link. It accepts the same directly loadable image URLs and local asset paths as `options.icon-fallback`, with an optional `auto-invert` prefix and no icon library shorthand support. The override replaces the entire fallback value, so include `auto-invert` on the override if that image needs inversion.
+Overrides the widget-level fallback image for this link. It accepts the same directly loadable image URLs and browser-accessible asset paths as `options.icon-fallback`, with an optional `auto-invert` prefix and no icon library shorthand support. The override replaces the entire fallback value, so include `auto-invert` on the override if that image needs inversion.
 
 Set `icon-fallback: ""` to explicitly disable the inherited fallback for a link. The fallback is only used if the link has a configured `icon` and that image fails to load.
 
@@ -148,13 +148,36 @@ Overrides the widget-level `hide-arrow` setting for this link.
 
 An explicit `false` also overrides a global `hide-arrow: true`.
 
+## Use cases
+
+### Service portal
+
+Use *Bigger Bookmarks* as a lightweight start page for self-hosted services. Each entry can include an icon, title, description, and link. Unlike a monitoring widget, it does not poll the linked services or require API credentials merely to display them.
+
+This is useful when you want a single place to access your applications without background monitoring.
+
+### Favicon with a failure indicator
+
+A service's favicon URL can be used as its icon. If the browser cannot load or decode the favicon, the widget displays the configured fallback image:
+
+```yaml
+- title: My Service
+  url: https://service.example/
+  icon: https://service.example/favicon.ico
+  icon-fallback: /assets/icons/service-unavailable.svg
+```
+
+For example, the fallback image can be a red cross to provide a quick visual hint that the service may be unavailable.
+
+This is not a health check: it only reacts when the browser loads the image, does not poll the service, and may be affected by browser caching or an inaccessible favicon path.
+
 ## Configuration
 
 The configuration below defines the template with the YAML anchor `&bigger-bookmarks-template`. For additional *Bigger Bookmarks* widgets in the same YAML document, use `template: *bigger-bookmarks-template` and provide each widget's own `options`.
 
 ```yaml
 - type: custom-api
-  title: Bigger Bookmark
+  title: Bigger Bookmarks
   options:
     color: 20 50 50
     hide-arrow: false
@@ -396,7 +419,7 @@ The configuration below defines the template with the YAML anchor `&bigger-bookm
 
 The widget does not define a widget-level `url`, so Glance does not perform a server-side request or health check.
 
-Icon images are fetched directly by the browser. The `si:`, `mdi:`, `di:`, and `sh:` forms resolve to externally hosted jsDelivr icon files. Use a local path such as `/assets/icons/example.svg` when icons should instead be served from Glance's configured assets directory.
+Icon images are fetched directly by the browser. The `si:`, `mdi:`, `di:`, and `sh:` forms resolve to externally hosted jsDelivr icon files. Use a browser-accessible path such as `/assets/icons/example.svg` when icons should instead be served from Glance's configured assets directory.
 
 For example, add another widget after the template definition to configure a shared monochrome fallback with `auto-invert`, a per-link colored fallback without inversion, and a link with fallback disabled. Replace the asset paths with files in your own Glance assets directory:
 

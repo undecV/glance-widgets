@@ -17,7 +17,7 @@
         icon: auto-invert /assets/__bigger_bookmarks_missing_primary__.png
         icon-fallback: /assets/icons/svgrepo-com/warning-22151.svg
       - title: Image Fallback
-        description: "Fallback also accepts an image URL or local path."
+        description: "Fallback also accepts an image URL or browser-accessible path."
         url: https://example.com/
         icon: /assets/__bigger_bookmarks_missing_primary__.png
         icon-fallback: /static/02b8858d2d/app-icon.png
@@ -121,12 +121,12 @@
             icon: auto-invert ./static/02b8858d2d/app-icon.png
 
           - title: Simple Icons
-            description: "si: uses SVG and automatically enables flat-icon."
+            description: "si: uses SVG and automatically enables auto-invert styling."
             url: https://github.com/
             icon: si:github
 
           - title: Material Design Icons
-            description: "mdi: uses SVG and automatically enables flat-icon."
+            description: "mdi: uses SVG and automatically enables auto-invert styling."
             url: https://example.com/mdi
             icon: mdi:bookmark
 
