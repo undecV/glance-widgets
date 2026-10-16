@@ -25,7 +25,7 @@
           "
         >
           <img
-            class="cached finished-transition{{ if or $frameless $padding }} rounded{{ end }}"
+            {{ if or $frameless $padding }}class="rounded"{{ end }}
             loading="lazy"
             decoding="async"
             src="{{ $src }}"

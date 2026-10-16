@@ -8,7 +8,9 @@ A simple image widget with an optional caption, internal frame, and padding cont
 
 ## Preview
 
-![Preview](./preview.png)
+![Figure Card displaying a padded Moe Counter with a caption](./preview.png)
+
+*The preview shows one example using a padded Moe Counter. Frame, padding, and caption behavior can be configured independently.*
 
 ## Options
 
@@ -22,13 +24,13 @@ A simple image widget with an optional caption, internal frame, and padding cont
 
 ### `src`
 
-Direct URL or local path to the image.
+Direct image URL or browser-accessible path, such as `/assets/image.png`.
 
-The browser loads the image normally. The widget itself does not make an API request.
+The browser loads the image directly; Glance does not fetch it through the `custom-api` widget. The widget-level `cache` property therefore does not control image caching, which depends on the image server's HTTP cache headers.
 
 ### `alt`
 
-Alternative text for the image.
+Alternative text for the image. This maps directly to the HTML `alt` attribute and is used for accessibility.
 
 This option may be omitted. The widget then renders `alt=""`.
 
@@ -82,7 +84,7 @@ When adding multiple *Figure Cards*, define the template once with a YAML anchor
         "
       >
         <img
-          class="cached finished-transition{{ if or $frameless $padding }} rounded{{ end }}"
+          {{ if or $frameless $padding }}class="rounded"{{ end }}
           loading="lazy"
           decoding="async"
           src="{{ $src }}"
