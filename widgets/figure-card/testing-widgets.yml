@@ -8,47 +8,71 @@
     frameless: false
     padding: false
     caption: ~
-    template: &figure-card-template |
-      {{ $src := .Options.StringOr "src" "" }}
-      {{ $alt := .Options.StringOr "alt" "" }}
-      {{ $caption := .Options.StringOr "caption" "" }}
-      {{ $frameless := .Options.BoolOr "frameless" false }}
-      {{ $padding := .Options.BoolOr "padding" false }}
+  template: &figure-card-template |
+    {{ $src := .Options.StringOr "src" "" }}
+    {{ $alt := .Options.StringOr "alt" "" }}
+    {{ $url := .Options.StringOr "url" "" }}
+    {{ $caption := .Options.StringOr "caption" "" }}
+    {{ $frameless := .Options.BoolOr "frameless" false }}
+    {{ $padding := .Options.BoolOr "padding" false }}
 
-      {{ if $src }}
-        <figure
-          class="card{{ if not $frameless }} widget-content-frame{{ else }} rounded{{ end }}"
-          style="
-            margin: 0;
-            overflow: hidden;
-            {{ if $padding }}padding: var(--widget-content-padding);{{ end }}
-          "
+    {{ $target := "_blank" }}
+    {{ if .Options.BoolOr "same-tab" false }}
+      {{ $target = "" }}
+    {{ end }}
+    {{ with $configuredTarget := .Options.StringOr "target" "" }}
+      {{ $target = $configuredTarget }}
+    {{ end }}
+
+    {{ if $src }}
+      {{ if $url }}
+        <a
+          class="block"
+          href="{{ $url | safeURL }}"
+          {{ if $target }}target="{{ $target }}"{{ end }}
+          rel="noopener noreferrer"
+          style="text-decoration: none;"
+          {{ if and (not $alt) (not $caption) }}aria-label="{{ $url }}"{{ end }}
         >
-          <img
-            {{ if or $frameless $padding }}class="rounded"{{ end }}
-            loading="lazy"
-            decoding="async"
-            src="{{ $src }}"
-            alt="{{ $alt }}"
-            style="display: block; width: 100%; height: auto;"
-          >
-
-          {{ with $caption }}
-            <figcaption
-              class="
-                margin-top-10
-                flex
-                flex-column
-                grow
-                color-subdue
-                {{ if not $padding }}padding-inline-widget margin-bottom-widget{{ end }}
-              "
-            >
-              {{ . }}
-            </figcaption>
-          {{ end }}
-        </figure>
       {{ end }}
+
+      <figure
+        class="card{{ if not $frameless }} widget-content-frame{{ else }} rounded{{ end }}"
+        style="
+          margin: 0;
+          overflow: hidden;
+          {{ if $padding }}padding: var(--widget-content-padding);{{ end }}
+        "
+      >
+        <img
+          {{ if or $frameless $padding }}class="rounded"{{ end }}
+          loading="lazy"
+          decoding="async"
+          src="{{ $src }}"
+          alt="{{ $alt }}"
+          style="display: block; width: 100%; height: auto;"
+        >
+
+        {{ with $caption }}
+          <figcaption
+            class="
+              margin-top-10
+              flex
+              flex-column
+              grow
+              color-subdue
+              {{ if not $padding }}padding-inline-widget margin-bottom-widget{{ end }}
+            "
+          >
+            {{ . }}
+          </figcaption>
+        {{ end }}
+      </figure>
+
+      {{ if $url }}
+        </a>
+      {{ end }}
+    {{ end }}
 
 
 # Inner framed, no padding, with caption
@@ -133,5 +157,47 @@
     frameless: true
     padding: true
     caption: Caption for a padded frameless figure.
+  template: *figure-card-template
+
+# Linked card, default target
+- type: custom-api
+  title: Figure — linked / default target
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: Linked Figure Card
+    url: https://example.com/default-target
+    frameless: false
+    padding: true
+    caption: The entire internal Figure Card links to a new tab.
+  template: *figure-card-template
+
+# Linked card, same tab; caption provides the accessible name
+- type: custom-api
+  title: Figure — linked / same tab
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: ""
+    url: https://example.com/same-tab
+    same-tab: true
+    frameless: true
+    padding: false
+    caption: This caption labels a same-tab Figure Card link.
+  template: *figure-card-template
+
+# Explicit target overrides same-tab; URL provides the accessible-name fallback
+- type: custom-api
+  title: Figure — linked / explicit target
+  frameless: true
+  options:
+    src: https://placehold.co/600x400
+    alt: ""
+    url: https://example.com/explicit-target
+    same-tab: true
+    target: _blank
+    frameless: false
+    padding: false
+    caption: ~
   template: *figure-card-template
 
