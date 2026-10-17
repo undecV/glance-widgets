@@ -88,6 +88,12 @@
             target: _self
             icon: sh:glance
 
+          # Custom URL scheme
+          - title: Steam Launcher
+            description: "Tests a steam:// link through safeURL."
+            url: steam://rungameid/3557620
+            icon: si:steam
+
 
     # Same links, but global arrow hidden
     - <<: *bigger-bookmarks
